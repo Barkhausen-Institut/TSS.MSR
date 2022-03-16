@@ -220,7 +220,7 @@ class vector_of_bases_const_iterator_interface :
 template<class B, class _IteratorTraits>
 class vector_of_bases_iterator_impl
 {
-    template<class _D, class _B>
+    template<class _D, class _BFIX>
     friend class vector_of_bases_for;
 
 public:
