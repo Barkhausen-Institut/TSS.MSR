@@ -3,8 +3,8 @@ CC = g++
 CFLAGS_DBG = -g -DDEBUG -D_DEBUG
 CFLAGS_REL = -O2 -DNDEBUG
 
-_CFLAGS = -Wall -std=c++11 -Iinclude
-CFLAGS_SRC = $(_CFLAGS) -fPIC -D_TPMCPPLIB
+_CFLAGS = -Wall -std=c++11 -Iinclude -I../../install/include
+CFLAGS_SRC = $(_CFLAGS) -fPIC -D_TPMCPPLIB -DOPENSSL_NO_SM3
 CFLAGS_SMPL = $(_CFLAGS)
 
 SRCDIR = Src
@@ -87,7 +87,7 @@ $(DEPFILES_SMPL):
 
 
 $(SAMPLES): $(SMPL_OBJS) $(TSS_A)
-	$(CC) -o $@ $(SMPL_OBJS) $(TSS_A) $(CFLAGS_SMPL) -L/usr/lib -lcrypto -ldl
+	$(CC) -o $@ $(SMPL_OBJS) $(TSS_A) $(CFLAGS_SMPL) -L../../install/lib -lcrypto -ldl
 
 samples: $(SAMPLES)
 

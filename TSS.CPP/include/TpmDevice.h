@@ -244,6 +244,50 @@ protected:
 };
 
 
+/// <summary> TpmCharDevice accesses the TPM through a Linux character device. </summary>
+class _DLLEXP_ TpmCharDevice : public TpmDevice
+{
+public:
+    /// <summary> TpmCharDevice opens a character device that exposes
+    // the hardware TPM on Linux. </summary>
+    TpmCharDevice(string devName = "/dev/tpm0");
+    ~TpmCharDevice();
+
+    virtual bool Connect();
+    virtual void Close();
+
+    virtual void DispatchCommand(const ByteVec& outBytes);
+    virtual ByteVec GetResponse();
+    virtual bool ResponseIsReady() const;
+
+protected:
+    string DevName;
+    int fd;
+};
+
+
+/// <summary> TpmUnixDevice accesses the TPM through a UNIX domain socket. </summary>
+class _DLLEXP_ TpmUnixDevice : public TpmDevice
+{
+public:
+    /// <summary> TpmCharDevice opens a character device that exposes
+    // the hardware TPM on Linux. </summary>
+    TpmUnixDevice(string socketName);
+    ~TpmUnixDevice();
+
+    virtual bool Connect();
+    virtual void Close();
+
+    virtual void DispatchCommand(const ByteVec& outBytes);
+    virtual ByteVec GetResponse();
+    virtual bool ResponseIsReady() const;
+
+protected:
+    string SocketName;
+    int fd;
+};
+
+
 class _DLLEXP_ TpmTbsDevice : public TpmDevice
 {
 public:

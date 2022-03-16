@@ -12,6 +12,9 @@
 #elif __linux__
 #   include <fcntl.h>
 #   include <dlfcn.h>
+#   include <poll.h>
+#   include <sys/socket.h>
+#   include <sys/un.h>
 #endif
 
 _TPMCPP_BEGIN
@@ -351,6 +354,142 @@ bool TpmTcpDevice::ResponseIsReady() const
     return numReady == 1;
 }
 
+
+TpmCharDevice::TpmCharDevice(string devName)
+{
+    DevName = devName;
+    fd = -1;
+}
+
+TpmCharDevice::~TpmCharDevice()
+{
+    Close();
+}
+
+bool TpmCharDevice::Connect()
+{
+    fd = open(DevName.c_str(), O_RDWR);
+    return fd >= 0;
+}
+
+void TpmCharDevice::Close()
+{
+    if (fd >= 0) {
+        close(fd);
+        fd = -1;
+    }
+}
+
+void TpmCharDevice::DispatchCommand(const ByteVec& cmdBuf)
+{
+    // printf("TpmCharDevice::DispatchCommand: cmdBuf.size=%zd\n", cmdBuf.size());
+    ssize_t bytes = write(fd, cmdBuf.data(), cmdBuf.size());
+    if (bytes <= 0)
+        throw runtime_error("Failed to write to " + DevName);
+}
+
+ByteVec TpmCharDevice::GetResponse()
+{
+    ByteVec resp(65536);
+
+    size_t num_read_total = 0;
+    ssize_t num_read_now = 0;
+    do {
+        num_read_now = read(fd, resp.data() + num_read_total, 4096);
+        // printf("TpmCharDevice::GetResponse: num_read_now=%zd\n", num_read_now);
+        if (num_read_now < 0)
+            throw runtime_error("Failed to read from " + DevName);
+        num_read_total += num_read_now;
+    } while ((num_read_now > 0 || (num_read_now == 0 && errno == EINTR)) &&
+             num_read_total + 4096 <= resp.capacity());
+
+    resp.resize(num_read_total);
+    // printf("TpmCharDevice::GetResponse: resp.size=%zd\n", resp.size());
+    return resp;
+}
+
+bool TpmCharDevice::ResponseIsReady() const
+{
+    // printf("TpmCharDevice::ResponseIsReady\n");
+    struct pollfd fds;
+    fds.fd = fd;
+    fds.events = POLLIN;
+    fds.revents = 0;
+
+    int err = poll(&fds, 1, 0);
+    return (err == 0) && (fds.revents & POLLIN);
+}
+
+
+TpmUnixDevice::TpmUnixDevice(string socketName)
+{
+    SocketName = socketName;
+    fd = -1;
+}
+
+TpmUnixDevice::~TpmUnixDevice()
+{
+    Close();
+}
+
+bool TpmUnixDevice::Connect()
+{
+    struct sockaddr_un addr;
+
+    memset(&addr, 0, sizeof(struct sockaddr_un));
+    addr.sun_family = AF_UNIX;
+    strncpy(addr.sun_path, SocketName.c_str(), sizeof(addr.sun_path) - 1);
+
+    fd = socket(AF_UNIX, SOCK_STREAM, 0);
+    if (fd < 0)
+        return false;
+    
+    int res = connect(fd, (const struct sockaddr *) &addr, sizeof(struct sockaddr_un));
+
+    return res == 0;
+}
+
+void TpmUnixDevice::Close()
+{
+    if (fd >= 0) {
+        close(fd);
+        fd = -1;
+    }
+}
+
+void TpmUnixDevice::DispatchCommand(const ByteVec& cmdBuf)
+{
+    // printf("TpmUnixDevice::DispatchCommand: cmdBuf.size=%zd\n", cmdBuf.size());
+    ssize_t bytes = write(fd, cmdBuf.data(), cmdBuf.size());
+    if (bytes <= 0)
+        throw runtime_error("Failed to write to " + SocketName);
+}
+
+ByteVec TpmUnixDevice::GetResponse()
+{
+    ByteVec resp(4096);
+
+    ssize_t num_read = read(fd, resp.data(), resp.capacity());
+    // printf("TpmUnixDevice::GetResponse: num_read=%zd\n", num_read);
+    if (num_read < 0)
+        throw runtime_error("Failed to read from " + SocketName);
+
+    resp.resize(num_read);
+    // printf("TpmUnixDevice::GetResponse: resp.size=%zd\n", resp.size());
+    return resp;
+}
+
+bool TpmUnixDevice::ResponseIsReady() const
+{
+    // printf("TpmUnixDevice::ResponseIsReady\n");
+    struct pollfd fds;
+    fds.fd = fd;
+    fds.events = POLLIN;
+    fds.revents = 0;
+
+    int err = poll(&fds, 1, 0);
+    return (err == 0) && (fds.revents & POLLIN);
+}
 
 TpmTbsDevice::~TpmTbsDevice()
 {
