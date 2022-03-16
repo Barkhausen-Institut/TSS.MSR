@@ -3,6 +3,7 @@ def build(gen, env):
 
     env['CPPFLAGS'] += [
         '-D__linux__=1',
+        '-D__m3__=1',
         '-D_GNU_SOURCE',
         '-D_TPMCPPLIB',
     ]

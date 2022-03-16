@@ -355,6 +355,7 @@ bool TpmTcpDevice::ResponseIsReady() const
 }
 
 
+#if !defined(__m3__)
 TpmCharDevice::TpmCharDevice(string devName)
 {
     DevName = devName;
@@ -419,7 +420,6 @@ bool TpmCharDevice::ResponseIsReady() const
     int err = poll(&fds, 1, 0);
     return (err == 0) && (fds.revents & POLLIN);
 }
-
 
 TpmUnixDevice::TpmUnixDevice(string socketName)
 {
@@ -868,5 +868,6 @@ bool TpmTbsDevice::ResponseIsReady() const
 }
 
 #endif // __linux__
+#endif // __m3__
 
 _TPMCPP_END

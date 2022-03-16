@@ -244,6 +244,7 @@ protected:
 };
 
 
+#if !defined(__m3__)
 /// <summary> TpmCharDevice accesses the TPM through a Linux character device. </summary>
 class _DLLEXP_ TpmCharDevice : public TpmDevice
 {
@@ -321,5 +322,6 @@ protected:
 #endif
 #endif // __linux__
 };
+#endif
 
 _TPMCPP_END
