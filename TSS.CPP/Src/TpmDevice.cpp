@@ -870,4 +870,40 @@ bool TpmTbsDevice::ResponseIsReady() const
 #endif // __linux__
 #endif // __m3__
 
+TpmNullDevice::TpmNullDevice()
+{
+}
+
+TpmNullDevice::~TpmNullDevice()
+{
+    Close();
+}
+
+bool TpmNullDevice::Connect()
+{
+    return true;
+}
+
+void TpmNullDevice::Close()
+{
+}
+
+void TpmNullDevice::DispatchCommand(const ByteVec& cmdBuf)
+{
+    throw runtime_error("attempt to talk to non-functional NULL TPM");
+}
+
+ByteVec TpmNullDevice::GetResponse()
+{
+    throw runtime_error("attempt to talk to non-functional NULL TPM");
+}
+
+bool TpmNullDevice::ResponseIsReady() const
+{
+    return false;
+}
+
+
+
+
 _TPMCPP_END

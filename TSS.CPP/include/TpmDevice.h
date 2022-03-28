@@ -324,4 +324,21 @@ protected:
 };
 #endif
 
+
+/// <summary> TpmNullDevice will explode, if one tries to talk to it ... </summary>
+class _DLLEXP_ TpmNullDevice : public TpmDevice
+{
+public:
+    /// <summary> TpmNullDevice is a non-functional TPM device. </summary>
+    TpmNullDevice();
+    ~TpmNullDevice();
+
+    virtual bool Connect();
+    virtual void Close();
+
+    virtual void DispatchCommand(const ByteVec& outBytes);
+    virtual ByteVec GetResponse();
+    virtual bool ResponseIsReady() const;
+};
+
 _TPMCPP_END
