@@ -12,6 +12,10 @@ def build(gen, env):
         'src/libs/openssl/include',
     ]
 
+    # disable LTO and debug symbols to reduce link times
+    env['CXXFLAGS'] += ['-g0']
+    env.remove_flag('CXXFLAGS', '-flto')
+
     # shut off warnings
     env['CXXFLAGS'] += [
         '-Wno-sign-conversion',
